@@ -148,9 +148,14 @@ to match loses webhooks invisibly, which stays invisible until a payment has gon
 astray. Keep entries as specific as the listener allows.
 
 One thing narrows what a prefix opens up: a bypassed path that does not exist
-comes back as a bare `404`, not WordPress's 404 page. Without that, whitelisting
-`/mepr` would serve the site's own 404 template — navigation, recent posts, site
-name — to anyone who asked for a path beneath it.
+comes back as a bare `404`, not WordPress's 404 page. That page is a
+reconnaissance gift — it carries the WordPress version, the active theme and the
+names of installed plugins — and whitelisting `/mepr` would otherwise serve it to
+anyone who asked for any path beneath the prefix.
+
+Only HTML is replaced, on every method, and only for requests without the
+password. A JSON or plain-text `404` from a real endpoint is that endpoint
+reporting a result, so it reaches the caller intact.
 
 > **Query-string endpoints.** Bypasses match on the path only. An endpoint like
 > `/?wc-api=WC_Gateway_Paypal` has a path of `/`, which cannot be whitelisted.
