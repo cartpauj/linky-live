@@ -1,7 +1,7 @@
 {
   "name": "linky-live",
   "productName": "Linky Live",
-  "version": "0.0.7",
+  "version": "1.0.0",
   "description": "Public HTTPS links for Local sites, with per-path auth bypass for webhook and IPN testing.",
   "author": "cartpauj",
   "license": "GPL-3.0-or-later",

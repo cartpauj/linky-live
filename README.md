@@ -346,8 +346,8 @@ Pushing a `vX.Y.Z` tag builds the archive and publishes it as a GitHub release.
 ```bash
 # 1. bump the version in package.json and commit
 # 2. tag it, matching exactly
-git tag v0.0.2
-git push origin v0.0.2
+git tag v1.0.1
+git push origin v1.0.1
 ```
 
 The workflow refuses to publish if the tag and `package.json` version disagree,
