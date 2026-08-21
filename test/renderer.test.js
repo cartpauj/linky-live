@@ -15,6 +15,7 @@ stubs.set('react', {
 	createElement: (type, props, ...children) => ({ type, props: props || {}, children }),
 	useState: (initial) => [initial, () => {}],
 	useEffect: () => {},
+	useRef: (initial) => ({ current: initial }),
 	useCallback: (fn) => fn,
 });
 
@@ -266,4 +267,31 @@ test('the panel keeps itself current without being navigated away from', () => {
 	// and another timer behind.
 	assert.match(source, /removeListener\(IPC\.CHANGED/, 'must unsubscribe on unmount');
 	assert.match(source, /clearInterval\(timer\)/, 'must clear its timer on unmount');
+});
+
+test('a released and re-allocated address brings its own credentials with it', () => {
+	const { nextDraft } = require('../src/renderer.js');
+
+	// Release, then turn the link on again: a new hostname, and a new password
+	// generated with it. The field held the old password, which cannot work, and
+	// there is nothing about it worth keeping.
+	assert.equal(nextDraft('old-pass', 'old-pass', 'new-pass', true), 'new-pass');
+
+	// Even a half-typed edit goes, because it belongs to an address that is gone.
+	assert.equal(nextDraft('half-typ', 'old-pass', 'new-pass', true), 'new-pass');
+});
+
+test('a credential field follows the server unless it is being edited', () => {
+	const { nextDraft } = require('../src/renderer.js');
+
+	// Empty on first paint.
+	assert.equal(nextDraft('', '', 'cedar', false), 'cedar');
+
+	// "Generate new pair", or another window saving: the field still holds what the
+	// server last said, so it is not an edit and follows.
+	assert.equal(nextDraft('cedar', 'cedar', 'heron', false), 'heron');
+
+	// Typed and not yet saved. The poll runs every couple of seconds, so following
+	// the server here would delete what someone is in the middle of writing.
+	assert.equal(nextDraft('my-own-pass', 'cedar', 'cedar', false), 'my-own-pass');
 });

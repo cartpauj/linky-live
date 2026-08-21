@@ -18,7 +18,7 @@ const { ipcRenderer } = require('electron');
 
 const stylesheet = require('./styles');
 
-const { useCallback, useEffect, useState } = React;
+const { useCallback, useEffect, useRef, useState } = React;
 
 const h = React.createElement;
 
@@ -41,6 +41,25 @@ const IPC = {
 	CHANGED: 'linky-live:changed',
 };
 
+/**
+ * What a credential field should show once the server has been heard from.
+ *
+ * Following the server unconditionally would delete what someone is halfway
+ * through typing; never following it leaves a stale password on screen after the
+ * pair is regenerated, or after an address is released and a new one allocated.
+ *
+ * So: a field that still holds what the server last said is not an edit, and
+ * follows. A field holding anything else is an edit, and is left alone — unless
+ * the record itself has been replaced, when the edit belongs to something gone.
+ */
+function nextDraft(prev, lastFromServer, fromServer, fresh) {
+	if (fresh || prev === '' || prev === lastFromServer) {
+		return fromServer;
+	}
+
+	return prev;
+}
+
 function LinkyLivePanel({ site }) {
 	const [state, setState] = useState(null);
 	const [busy, setBusy] = useState(false);
@@ -54,14 +73,35 @@ function LinkyLivePanel({ site }) {
 	const [passDraft, setPassDraft] = useState('');
 	const [pathDraft, setPathDraft] = useState('');
 
+	/*
+	 * What the server last said the credentials were, so a field can tell an
+	 * unedited value from something typed and not yet saved.
+	 */
+	const seen = useRef({ hostname: null, authUser: '', authPass: '' });
+
 	const apply = useCallback((next) => {
 		setState(next);
 
-		// Seed credential fields from the server without clobbering typing.
-		if (next.site) {
-			setUserDraft((prev) => (prev === '' ? next.site.authUser : prev));
-			setPassDraft((prev) => (prev === '' ? next.site.authPass : prev));
-		}
+		const record = next.site || null;
+		const server = {
+			hostname: record ? record.hostname : null,
+			authUser: record ? record.authUser : '',
+			authPass: record ? record.authPass : '',
+		};
+
+		/*
+		 * A different hostname is a different allocation, so whatever is in the
+		 * fields belongs to an address that no longer exists. Releasing an address
+		 * and turning the link back on lands here: the new address comes with a new
+		 * password, and showing the old one would have someone typing a password
+		 * that cannot work.
+		 */
+		const fresh = server.hostname !== seen.current.hostname;
+
+		setUserDraft((prev) => nextDraft(prev, seen.current.authUser, server.authUser, fresh));
+		setPassDraft((prev) => nextDraft(prev, seen.current.authPass, server.authPass, fresh));
+
+		seen.current = server;
 	}, []);
 
 	const refresh = useCallback(async () => {
@@ -575,3 +615,6 @@ module.exports = function renderer(context) {
 			render: () => h(LinkyLivePanel, { site: routeChildrenProps.site }),
 		}));
 };
+
+// Exported for tests; the addon entry point is the function above.
+module.exports.nextDraft = nextDraft;
