@@ -542,3 +542,55 @@ test('nothing is configured out of the box', async () => {
 
 	assert.equal((await H.ipc.get('linky-live:get-state')(H.site.id)).configured, false);
 });
+
+test('a site with no resolvable port fails loudly rather than guessing 80', async () => {
+	const H = harness();
+
+	// This is the site-domains-mode shape: the URL is a bare domain with no port.
+	// Defaulting to 80 there would point the tunnel at Local's router instead of
+	// the site, which serves the wrong content instead of reporting a problem.
+	H.site.frontendPort = undefined;
+	H.site.frontendUrl = 'http://mysite.local';
+
+	delete require.cache[require.resolve('../src/main.js')];
+	require('../src/main.js')(H.context);
+
+	await H.ipc.get('linky-live:save-settings')({
+		apiKey: 'k',
+		controlHostname: 'linky-live.example.com',
+	});
+
+	await assert.rejects(
+		() => H.ipc.get('linky-live:enable')(H.site.id),
+		/port/i,
+		'must report that it could not determine the port',
+	);
+});
+
+test('the nginx port is used in either router mode', async () => {
+	// Local resolves frontendPort from the site's own HTTP service config, so it is
+	// present in both modes even though the URL differs.
+	for (const frontendUrl of ['http://localhost:10028', 'http://mysite.local']) {
+		const H = harness();
+
+		H.site.frontendPort = 10028;
+		H.site.frontendUrl = frontendUrl;
+
+		delete require.cache[require.resolve('../src/main.js')];
+		require('../src/main.js')(H.context);
+
+		H.optIn({
+			hostname: 'linky-k4d8vn.example.com',
+			url: 'https://linky-k4d8vn.example.com',
+			port: 10028,
+			bypassPaths: [],
+			enabled: false,
+		});
+
+		const state = await H.ipc.get('linky-live:get-state')(H.site.id);
+
+		// The port probe ran against the nginx port, not the router's 80.
+		assert.equal(state.siteRunning, false, `${frontendUrl}: nothing is listening on 10028 in tests`);
+		assert.equal(state.site.port, 10028, `${frontendUrl}: must record the nginx port`);
+	}
+});

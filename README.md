@@ -177,6 +177,22 @@ re-toggle anything.
 the URL reserved. **Release address** removes everything, including the
 mu-plugin.
 
+## Router modes
+
+Works with both of Local's router modes. The tunnel connects **directly to the
+site's own nginx port**, which Local exposes regardless of mode, so its router is
+never involved — in site-domains mode that router owns port 80 and dispatches by
+`Host` header, and we bypass it entirely.
+
+| | localhost mode | site domains mode |
+| --- | --- | --- |
+| Site URL | `http://localhost:10028` | `http://mysite.local` |
+| Tunnel connects to | `127.0.0.1:10028` | `127.0.0.1:10028` |
+
+The site's nginx config has no `server_name`, so it answers on that port whatever
+`Host` arrives. The mu-plugin derives the local host from `get_option('home')`,
+so it reports whichever form the site actually uses.
+
 ## Notes
 
 - Your `.local` address is unaffected. URL rewriting only applies to requests

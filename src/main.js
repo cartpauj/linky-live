@@ -301,17 +301,26 @@ module.exports = function addon(context) {
 	 * Enable / disable
 	 * ---------------------------------------------------------------- */
 
+	/**
+	 * The port the site's own nginx listens on.
+	 *
+	 * Local's `frontendPort` falls back to `httpPort`, which reads the site's HTTP
+	 * service config directly, so it is correct in both router modes. Connecting to
+	 * it means the tunnel reaches nginx without involving Local's router — which in
+	 * site-domains mode owns port 80 and dispatches by Host header.
+	 *
+	 * The URL fallback only helps in localhost mode, where the port is in the URL.
+	 * In site-domains mode the URL is a bare domain, and defaulting to 80 there
+	 * would silently point the tunnel at the router instead of the site. Returning
+	 * nothing is better: the caller then reports that it could not determine a port.
+	 */
 	function frontendPort(site) {
-		// Local exposes this directly, but fall back to parsing the URL for older
-		// versions or unusual routing modes.
 		if (site.frontendPort) {
 			return Number(site.frontendPort);
 		}
 
 		try {
-			const url = new URL(site.frontendUrl);
-
-			return Number(url.port) || 80;
+			return Number(new URL(site.frontendUrl).port) || null;
 		} catch {
 			return null;
 		}
