@@ -175,6 +175,16 @@ module.exports = `
 	border-radius: 3px;
 }
 
+.ll-urlrow {
+	display: flex;
+	align-items: stretch;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+/* The address takes the space; its Copy button stays beside it at any width. */
+.ll-urlrow .ll-url { flex: 1; margin-bottom: 0; }
+.ll button.ll-copy { white-space: nowrap; }
+
 .ll-pill {
 	display: inline-block;
 	padding: 2px 9px;

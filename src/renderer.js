@@ -29,6 +29,7 @@ const IPC = {
 	RELEASE: 'linky-live:release',
 	UPDATE_AUTH: 'linky-live:update-auth',
 	UPDATE_PATHS: 'linky-live:update-paths',
+	OPEN: 'linky-live:open',
 };
 
 function LinkyLivePanel({ site }) {
@@ -336,12 +337,26 @@ function LinkyLivePanel({ site }) {
 		link
 			? h('div', { className: 'll-section' },
 				h('h3', null, 'Public address'),
-				h('code', { className: 'll-url' }, link.url),
+
+				// Copy sits with the address it copies, so the buttons below are only
+				// the two actions — the same pair, in the same words, as Local's own
+				// site header.
+				h('div', { className: 'll-urlrow' },
+					h('code', { className: 'll-url' }, link.url),
+					h('button', {
+						className: 'll-copy',
+						title: 'Copy this address to the clipboard',
+						onClick: () => copy(link.url, 'url'),
+					}, copied === 'url' ? 'Copied' : 'Copy'),
+				),
+
 				h('div', { className: 'll-row' },
-					h('button', { onClick: () => copy(link.url, 'url') },
-						copied === 'url' ? 'Copied' : 'Copy URL'),
-					h('button', { onClick: () => copy(`${link.url}/wp-admin/`, 'admin') },
-						copied === 'admin' ? 'Copied' : 'Copy wp-admin URL'),
+					// Opening is handled in the main process, which builds the URL from
+					// the site's own record rather than trusting one from here.
+					h('button', { onClick: () => ipcAsync(IPC.OPEN, { siteId: site.id, admin: false }) },
+						'Open site'),
+					h('button', { onClick: () => ipcAsync(IPC.OPEN, { siteId: site.id, admin: true }) },
+						'WP Admin'),
 					h('button', {
 						className: 'll-danger',
 						disabled: busy,

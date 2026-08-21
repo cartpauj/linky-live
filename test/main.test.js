@@ -90,12 +90,15 @@ function harness() {
 		formatHomePath: (p) => p,
 	});
 
+	const opened = [];
+
 	const context = {
 		environment: { userDataPath: path.join(tmp, 'userData') },
 		electron: {
 			app: { on() {} },
 			dialog: {},
 			ipcMain: { on: (channel, fn) => ipcMainHandlers.set(channel, fn) },
+			shell: { openExternal: async (url) => opened.push(url) },
 		},
 		hooks: {
 			addAction: (name, fn) => actions.set(name, fn),
@@ -113,7 +116,7 @@ function harness() {
 	};
 
 	return {
-		tmp, site, sitePath, actions, ipc, ipcMainHandlers, sent, notifications, context, optIn,
+		tmp, site, sitePath, actions, ipc, ipcMainHandlers, sent, notifications, context, optIn, opened,
 		wpCliCalls,
 		home: () => currentHome,
 		setHome: (url) => { currentHome = url; },
@@ -146,6 +149,7 @@ test('addon loads and registers its hooks and IPC endpoints', () => {
 		'linky-live:release',
 		'linky-live:update-auth',
 		'linky-live:update-paths',
+		'linky-live:open',
 	]) {
 		assert.ok(H.ipc.has(channel), `must register ${channel}`);
 	}
@@ -593,4 +597,43 @@ test('the nginx port is used in either router mode', async () => {
 		assert.equal(state.siteRunning, false, `${frontendUrl}: nothing is listening on 10028 in tests`);
 		assert.equal(state.site.port, 10028, `${frontendUrl}: must record the nginx port`);
 	}
+});
+
+test('the open endpoint builds the URL itself rather than taking one', async () => {
+	const H = harness();
+
+	delete require.cache[require.resolve('../src/main.js')];
+	require('../src/main.js')(H.context);
+
+	H.optIn({ hostname: 'linky-k4d8vn.example.com', url: 'https://linky-k4d8vn.example.com', enabled: true });
+
+	// The site's public address, and its wp-admin, are the only two things this
+	// can open — the renderer sends a flag, not a URL, so nothing it could be fed
+	// turns this into a way to launch arbitrary addresses.
+	assert.deepEqual(
+		await H.ipc.get('linky-live:open')({ siteId: H.site.id, admin: false }),
+		{ ok: true, url: 'https://linky-k4d8vn.example.com/' },
+	);
+
+	assert.deepEqual(
+		await H.ipc.get('linky-live:open')({ siteId: H.site.id, admin: true }),
+		{ ok: true, url: 'https://linky-k4d8vn.example.com/wp-admin/' },
+	);
+
+	assert.deepEqual(H.opened, [
+		'https://linky-k4d8vn.example.com/',
+		'https://linky-k4d8vn.example.com/wp-admin/',
+	], 'both must reach the default browser');
+});
+
+test('opening a site with no address does nothing', async () => {
+	const H = harness();
+
+	delete require.cache[require.resolve('../src/main.js')];
+	require('../src/main.js')(H.context);
+
+	// A site that never opted in has no hostname, so there is nothing to open and
+	// no URL to guess at.
+	assert.deepEqual(await H.ipc.get('linky-live:open')({ siteId: H.site.id, admin: false }), { ok: false });
+	assert.deepEqual(H.opened, [], 'the browser must not be launched');
 });

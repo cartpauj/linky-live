@@ -41,6 +41,7 @@ const IPC = {
 	UPDATE_AUTH: 'linky-live:update-auth',
 	UPDATE_PATHS: 'linky-live:update-paths',
 	GET_ALL: 'linky-live:get-all',
+	OPEN: 'linky-live:open',
 	CHANGED: 'linky-live:changed',
 };
 
@@ -607,6 +608,27 @@ module.exports = function addon(context) {
 			return acc;
 		}, {});
 	});
+	/**
+	 * Open a site's public address, or its wp-admin, in the default browser.
+	 *
+	 * The renderer sends a site id and a flag rather than a URL. Building the
+	 * address here means this cannot be turned into "open anything" — the only
+	 * addresses reachable through it are ones the addon itself allocated.
+	 */
+	addIpcAsyncListener(IPC.OPEN, async ({ siteId, admin }) => {
+		const record = readCache()[siteId];
+
+		if (!record || !record.hostname) {
+			return { ok: false };
+		}
+
+		const url = `https://${record.hostname}${admin ? '/wp-admin/' : '/'}`;
+
+		await electron.shell.openExternal(url);
+
+		return { ok: true, url };
+	});
+
 	addIpcAsyncListener(IPC.GET_SETTINGS, () => readSettings());
 
 	addIpcAsyncListener(IPC.SAVE_SETTINGS, (next) => writeSettings(next));
