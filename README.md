@@ -297,6 +297,26 @@ node --test test/            # no dependencies needed
 ./scripts/build-addon.sh     # dist/linky-live.tgz
 ```
 
+### Releasing
+
+Pushing a `vX.Y.Z` tag builds the archive and publishes it as a GitHub release.
+
+```bash
+# 1. bump the version in package.json and commit
+# 2. tag it, matching exactly
+git tag v1.1.0
+git push origin v1.1.0
+```
+
+The workflow refuses to publish if the tag and `package.json` version disagree,
+because Local de-duplicates add-ons by name and version — a mismatch means the
+installed add-on reports a different version than the release it came from. It
+also runs the tests and lints the mu-plugins first, so a broken build cannot ship.
+
+The release asset is always named `linky-live.tgz`, without a version. Local names
+the installed folder after the archive, so a versioned filename would leave a
+stale copy behind on every upgrade.
+
 ### Iterating on the add-on
 
 Local's `addon-development.json` has `enabled: true`, so a plain folder in the

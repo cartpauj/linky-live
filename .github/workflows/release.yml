@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # A tag that disagrees with package.json ships an archive whose version does
+      # not match the release. Local also de-duplicates add-ons by name and
+      # version, so the mismatch causes real confusion at install time.
+      - name: Check the tag matches package.json
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::Tag v$tag does not match package.json version $pkg."
+            echo "Bump the version in package.json, commit, then retag."
+            exit 1
+          fi
+
+          echo "Releasing version $pkg"
+
+      # Never publish an archive that does not pass its own tests.
+      - name: Run tests
+        run: node --test test/
+
+      - name: Lint mu-plugins
+        run: |
+          for file in mu-plugins/*.php; do
+            php -l "$file"
+          done
+
+      - name: Build
+        run: ./scripts/build-addon.sh
+
+      # The filename is deliberately unversioned: Local names the installed folder
+      # after the archive, so a versioned name would leave a stale copy behind on
+      # every upgrade. Each release carries its own copy of the asset.
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            dist/linky-live.tgz \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes

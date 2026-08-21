@@ -1,0 +1,33 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # node --test needs 18+; 20 is what the add-on is developed against.
+          node-version: '20'
+
+      # The add-on has no dependencies on purpose, so there is nothing to install.
+      - name: Run tests
+        run: node --test test/
+
+      # The mu-plugins are PHP and the Node tests cannot parse them, so a syntax
+      # error would otherwise only surface once a site tried to load one.
+      - name: Lint mu-plugins
+        run: |
+          for file in mu-plugins/*.php; do
+            php -l "$file"
+          done
+
+      - name: Verify the archive builds
+        run: ./scripts/build-addon.sh
