@@ -1,0 +1,26 @@
+{
+  "name": "linky-live",
+  "productName": "Linky Live",
+  "version": "1.0.0",
+  "description": "Public HTTPS links for Local sites, with per-path auth bypass for webhook and IPN testing.",
+  "author": "cartpauj",
+  "license": "GPL-3.0-or-later",
+  "main": "src/main.js",
+  "renderer": "src/renderer.js",
+  "engines": {
+    "local-by-flywheel": ">=9.0.0"
+  },
+  "files": [
+    "src",
+    "mu-plugins",
+    "icon.png",
+    "README.md"
+  ],
+  "icon": "icon.png",
+  "color": "#1c2128",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cartpauj/linky-live.git"
+  },
+  "homepage": "https://github.com/cartpauj/linky-live"
+}

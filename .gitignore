@@ -1,0 +1,7 @@
+node_modules/
+
+# Built add-on archive; releases are attached to GitHub, not committed.
+dist/
+*.tgz
+
+.DS_Store

@@ -1,0 +1,214 @@
+<!doctype html><html><head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #fff; font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  body { padding: 32px; display: flex; flex-direction: column; gap: 28px; align-items: flex-start; }
+  .asset { position: relative; overflow: hidden; }
+
+  #icon512 { width: 512px; height: 512px; }
+  #icon256w { width: 256px; height: 256px; }
+  #banner { width: 1200px; height: 630px; }
+  #cardmock { width: 200px; height: 120px; }
+
+  /* ---- shared icon interior ---- */
+  .iconbg {
+    width: 100%; height: 100%;
+    background:
+      radial-gradient(120% 100% at 78% 18%, rgba(81,187,123,.30) 0%, rgba(81,187,123,0) 58%),
+      linear-gradient(160deg, #232b34 0%, #171b21 100%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  /* faint grid to read as "local dev environment" */
+  .iconbg::before {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+  .mark { position: relative; width: 62%; height: 62%; }
+
+  /* ---- banner ---- */
+  #banner .bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(75% 95% at 88% 8%, rgba(81,187,123,.26) 0%, rgba(81,187,123,0) 60%),
+      radial-gradient(60% 80% at 4% 100%, rgba(80,198,219,.13) 0%, rgba(80,198,219,0) 62%),
+      linear-gradient(155deg, #242d36 0%, #14181d 100%);
+  }
+  #banner .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.038) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.038) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+  #banner .inner {
+    position: relative; height: 100%;
+    padding: 64px 78px 58px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .brandrow { display: flex; align-items: center; gap: 26px; }
+  .badge {
+    width: 104px; height: 104px; flex-shrink: 0;
+    background: linear-gradient(160deg, #2b343e 0%, #1b2027 100%);
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: 24px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .badge .mark { width: 62%; height: 62%; }
+  .kicker {
+    font-size: 15px; font-weight: 700; letter-spacing: .17em;
+    text-transform: uppercase; color: #6f8797; margin-bottom: 10px;
+  }
+  h1 { font-size: 92px; font-weight: 800; letter-spacing: -.035em; color: #fff; line-height: .96; }
+  h1 .g { color: #51bb7b; }
+  .tagline {
+    font-size: 27px; font-weight: 400; color: #a9bac6; line-height: 1.45;
+    max-width: 780px; margin-top: 26px;
+  }
+  .tagline b { color: #e8eff3; font-weight: 600; }
+  .chips { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 9px;
+    font-size: 19px; font-weight: 600;
+    padding: 11px 19px; border-radius: 9px;
+    border: 1px solid rgba(255,255,255,.13);
+    background: rgba(255,255,255,.045); color: #cfdde5;
+    font-family: 'Menlo', 'Consolas', monospace;
+  }
+  .chip.open { border-color: rgba(81,187,123,.45); background: rgba(81,187,123,.14); color: #86d8a4; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: #51bb7b; }
+  .lockglyph { width: 15px; height: 19px; }
+
+  /* Oversized mark bleeding off the right edge, to balance the left-set text. */
+  .watermark {
+    position: absolute; width: 620px; height: 620px;
+    right: -168px; top: 50%; transform: translateY(-50%) rotate(-8deg);
+    opacity: .085;
+  }
+
+  /* mechanism strip: explains how a webhook actually reaches the laptop */
+  .flow { display: flex; align-items: center; gap: 14px; }
+  .fnode {
+    font-family: 'Menlo', 'Consolas', monospace;
+    font-size: 15px; font-weight: 500; color: #7e93a1;
+    white-space: nowrap;
+  }
+  .fnode.hl { color: #b6c8d3; }
+  .farrow {
+    width: 26px; height: 1px; background: rgba(255,255,255,.20);
+    position: relative; flex-shrink: 0;
+  }
+  .farrow::after {
+    content: ''; position: absolute; right: 0; top: -2.5px;
+    border-left: 5px solid rgba(255,255,255,.28);
+    border-top: 3px solid transparent; border-bottom: 3px solid transparent;
+  }
+</style></head><body>
+
+<!-- ============ 512 icon ============ -->
+<div id="icon512" class="asset">
+  <div class="iconbg">
+    <svg class="mark" viewBox="0 0 24 24" fill="none" stroke-width="2.05"
+         stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke="#ffffff"/>
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke="#51bb7b"/>
+    </svg>
+  </div>
+</div>
+
+<!-- ============ 256 icon: scaled copy so content matches exactly ============ -->
+<div id="icon256w" class="asset">
+  <div style="width:256px;height:256px;overflow:hidden">
+    <div style="transform:scale(.5);transform-origin:top left;width:512px;height:512px">
+      <div class="iconbg">
+        <svg class="mark" viewBox="0 0 24 24" fill="none" stroke-width="2.05"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke="#ffffff"/>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke="#51bb7b"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ card mock: proves it reads at Local's real 60px ============ -->
+<div id="cardmock" class="asset" style="background:#1c2128;display:flex;align-items:center;justify-content:center">
+  <div style="height:60px;width:60px">
+    <div class="iconbg" style="border-radius:6px">
+      <svg class="mark" viewBox="0 0 24 24" fill="none" stroke-width="2.05"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke="#ffffff"/>
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke="#51bb7b"/>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- ============ banner ============ -->
+<div id="banner" class="asset">
+  <div class="bg"></div>
+  <div class="grid"></div>
+
+  <svg class="watermark" viewBox="0 0 24 24" fill="none" stroke-width="1.75"
+       stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke="#ffffff"/>
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke="#51bb7b"/>
+  </svg>
+
+  <div class="inner">
+
+    <div>
+      <div class="brandrow">
+        <div class="badge">
+          <svg class="mark" viewBox="0 0 24 24" fill="none" stroke-width="2.05"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke="#ffffff"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke="#51bb7b"/>
+          </svg>
+        </div>
+        <div>
+          <div class="kicker">Local Add-on</div>
+          <h1>Linky <span class="g">Live</span></h1>
+        </div>
+      </div>
+
+      <p class="tagline">
+        Permanent public HTTPS links for your Local sites &mdash;
+        <b>password protected</b>, with the paths you choose left open so
+        <b>Stripe webhooks and PayPal IPNs</b> actually get through.
+      </p>
+    </div>
+
+    <div class="chips">
+      <span class="chip"><span class="dot"></span>linky&#8209;k4d8vn.example.com</span>
+      <span class="chip">
+        <svg class="lockglyph" viewBox="0 0 14 18" fill="none" stroke="#cfdde5" stroke-width="1.7"
+             stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1.6" y="7.4" width="10.8" height="9" rx="2"/>
+          <path d="M4.2 7.4V5a2.8 2.8 0 0 1 5.6 0v2.4"/>
+        </svg>
+        whole site
+      </span>
+      <span class="chip open">/mepr &rarr; no auth</span>
+    </div>
+
+    <div class="flow">
+      <span class="fnode">Stripe</span>
+      <span class="farrow"></span>
+      <span class="fnode hl">Cloudflare&nbsp;edge</span>
+      <span class="farrow"></span>
+      <span class="fnode">cloudflared</span>
+      <span class="farrow"></span>
+      <span class="fnode hl">127.0.0.1:10063</span>
+    </div>
+
+  </div>
+</div>
+
+</body></html>
