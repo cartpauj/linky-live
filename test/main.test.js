@@ -572,31 +572,61 @@ test('a site with no resolvable port fails loudly rather than guessing 80', asyn
 });
 
 test('the nginx port is used in either router mode', async () => {
+	const net = require('node:net');
+
+	// Bind a real listener on a free port and probe that, rather than asserting
+	// nothing answers on a hardcoded one: 10028 is an ordinary Local port, so on a
+	// machine where that site happens to be running the old form of this test
+	// failed for a reason that had nothing to do with the code.
+	const listener = net.createServer(() => {});
+
+	await new Promise((resolve) => listener.listen(0, '127.0.0.1', resolve));
+
+	const port = listener.address().port;
+
 	// Local resolves frontendPort from the site's own HTTP service config, so it is
 	// present in both modes even though the URL differs.
-	for (const frontendUrl of ['http://localhost:10028', 'http://mysite.local']) {
-		const H = harness();
+	try {
+		for (const frontendUrl of [`http://localhost:${port}`, 'http://mysite.local']) {
+			const H = harness();
 
-		H.site.frontendPort = 10028;
-		H.site.frontendUrl = frontendUrl;
+			H.site.frontendPort = port;
+			H.site.frontendUrl = frontendUrl;
 
-		delete require.cache[require.resolve('../src/main.js')];
-		require('../src/main.js')(H.context);
+			delete require.cache[require.resolve('../src/main.js')];
+			require('../src/main.js')(H.context);
 
-		H.optIn({
-			hostname: 'linky-k4d8vn.example.com',
-			url: 'https://linky-k4d8vn.example.com',
-			port: 10028,
-			bypassPaths: [],
-			enabled: false,
-		});
+			H.optIn({
+				hostname: 'linky-k4d8vn.example.com',
+				url: 'https://linky-k4d8vn.example.com',
+				port,
+				bypassPaths: [],
+				enabled: false,
+			});
 
-		const state = await H.ipc.get('linky-live:get-state')(H.site.id);
+			const state = await H.ipc.get('linky-live:get-state')(H.site.id);
 
-		// The port probe ran against the nginx port, not the router's 80.
-		assert.equal(state.siteRunning, false, `${frontendUrl}: nothing is listening on 10028 in tests`);
-		assert.equal(state.site.port, 10028, `${frontendUrl}: must record the nginx port`);
+			// The probe went to the nginx port in both modes, never the router's 80.
+			assert.equal(state.siteRunning, true, `${frontendUrl}: must probe the site's own port`);
+			assert.equal(state.site.port, port, `${frontendUrl}: must record the nginx port`);
+		}
+	} finally {
+		await new Promise((resolve) => listener.close(resolve));
 	}
+
+	// And with nothing listening on that same port, the site reads as stopped.
+	const H = harness();
+
+	H.site.frontendPort = port;
+
+	delete require.cache[require.resolve('../src/main.js')];
+	require('../src/main.js')(H.context);
+
+	H.optIn({ hostname: 'linky-k4d8vn.example.com', port, enabled: false });
+
+	const stopped = await H.ipc.get('linky-live:get-state')(H.site.id);
+
+	assert.equal(stopped.siteRunning, false, 'a closed port must read as not running');
 });
 
 test('the open endpoint builds the URL itself rather than taking one', async () => {

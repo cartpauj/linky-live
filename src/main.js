@@ -40,7 +40,6 @@ const IPC = {
 	RELEASE: 'linky-live:release',
 	UPDATE_AUTH: 'linky-live:update-auth',
 	UPDATE_PATHS: 'linky-live:update-paths',
-	GET_ALL: 'linky-live:get-all',
 	OPEN: 'linky-live:open',
 	CHANGED: 'linky-live:changed',
 };
@@ -601,26 +600,6 @@ module.exports = function addon(context) {
 
 	addIpcAsyncListener(IPC.GET_STATE, (siteId) => getState(siteId));
 
-	/**
-	 * Every site's public URL in one call.
-	 *
-	 * The renderer needs this synchronously to answer Local's `openSiteUrl` filter,
-	 * which decides where the "Open site" and one-click admin buttons point. It
-	 * cannot await, so it keeps a local copy refreshed from here.
-	 */
-	addIpcAsyncListener(IPC.GET_ALL, () => {
-		const cache = readCache();
-
-		return Object.keys(cache).reduce((acc, id) => {
-			acc[id] = {
-				url: cache[id].url || '',
-				localUrl: cache[id].localUrl || '',
-				enabled: Boolean(cache[id].enabled),
-			};
-
-			return acc;
-		}, {});
-	});
 	/**
 	 * Open a site's public address, or its wp-admin, in the default browser.
 	 *

@@ -141,8 +141,16 @@ Anything at or below a listed path is publicly reachable, so keep entries
 specific. A bare `/` and wildcards are both rejected, because either would leave
 the whole site open.
 
-Matching respects path boundaries: `/mepr` covers `/mepr` and `/mepr/notify` but
-not `/meprivate`.
+An entry is a plain prefix, not a path segment: `/mepr` covers `/mepr`,
+`/mepr/notify` and also `/meprsdkfjl`. That is deliberate — gateway listeners
+append all sorts of things to their base path, and a bypass that silently fails
+to match loses webhooks invisibly, which stays invisible until a payment has gone
+astray. Keep entries as specific as the listener allows.
+
+One thing narrows what a prefix opens up: a bypassed path that does not exist
+comes back as a bare `404`, not WordPress's 404 page. Without that, whitelisting
+`/mepr` would serve the site's own 404 template — navigation, recent posts, site
+name — to anyone who asked for a path beneath it.
 
 > **Query-string endpoints.** Bypasses match on the path only. An endpoint like
 > `/?wc-api=WC_Gateway_Paypal` has a path of `/`, which cannot be whitelisted.
