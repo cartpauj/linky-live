@@ -25,7 +25,7 @@ stubs.set('@getflywheel/local/renderer', { ipcAsync: async () => ipcResponse });
 
 // The renderer sets a polling interval and subscribes to an ipc event; neither
 // should keep the test runner alive.
-stubs.set('electron', { ipcRenderer: { on: () => {} } });
+stubs.set('electron', { ipcRenderer: { on: () => {}, removeListener: () => {} } });
 
 const originalLoad = Module._load;
 
@@ -249,4 +249,21 @@ test('nothing user-facing is branded "Live Link"', () => {
 			);
 		});
 	}
+});
+
+test('the panel keeps itself current without being navigated away from', () => {
+	const fs = require('node:fs');
+	const source = fs.readFileSync('src/renderer.js', 'utf8');
+
+	// Starting a site is Local's doing and reaches the panel only as whether the
+	// port answers, so without a poll the tab still reads "not running" until you
+	// leave it and come back. The broadcast covers everything the addon itself
+	// changes, and arrives at once.
+	assert.match(source, /ipcRenderer\.on\(IPC\.CHANGED/, 'must subscribe to the change event');
+	assert.match(source, /setInterval\(refresh/, 'must poll while open');
+
+	// Both have to be torn down, or every visit to the tab leaves another listener
+	// and another timer behind.
+	assert.match(source, /removeListener\(IPC\.CHANGED/, 'must unsubscribe on unmount');
+	assert.match(source, /clearInterval\(timer\)/, 'must clear its timer on unmount');
 });

@@ -537,6 +537,13 @@ module.exports = function addon(context) {
 	 */
 	hooks.addAction('siteStarted', async (site) => {
 		if (!isEnabled(site.id)) {
+			// The panel reports whether the site is up, so one that has an address
+			// with its link switched off still needs telling. enable() below
+			// broadcasts for the sites that do resume.
+			if (readCache()[site.id]) {
+				await broadcast(site.id);
+			}
+
 			return;
 		}
 
@@ -579,6 +586,12 @@ module.exports = function addon(context) {
 	hooks.addAction('siteStopped', async (site) => {
 		if (cloudflared.isRunning(site.id)) {
 			await stopTunnel(site.id);
+		}
+
+		// The tunnel may already have been stopped by the pre-stop event, but the
+		// site itself is only down now, which is what the panel reports.
+		if (readCache()[site.id]) {
+			await broadcast(site.id);
 		}
 	});
 

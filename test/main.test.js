@@ -637,3 +637,44 @@ test('opening a site with no address does nothing', async () => {
 	assert.deepEqual(await H.ipc.get('linky-live:open')({ siteId: H.site.id, admin: false }), { ok: false });
 	assert.deepEqual(H.opened, [], 'the browser must not be launched');
 });
+
+test('starting or stopping a site tells the panel, even with the link off', async () => {
+	const H = harness();
+
+	delete require.cache[require.resolve('../src/main.js')];
+	require('../src/main.js')(H.context);
+
+	// An address that is allocated but switched off. The panel still reports
+	// whether the site is up, so it has to hear about a start it did not cause —
+	// otherwise the tab reads "not running" until you navigate away and back.
+	H.optIn({ hostname: 'linky-k4d8vn.example.com', url: 'https://linky-k4d8vn.example.com', enabled: false });
+
+	await H.actions.get('siteStarted')(H.site);
+
+	const started = H.sent.filter((m) => m.channel === 'linky-live:changed');
+
+	assert.equal(started.length, 1, 'a start must be broadcast');
+	assert.equal(started[0].payload.siteId, H.site.id);
+
+	await H.actions.get('siteStopped')(H.site);
+
+	assert.equal(
+		H.sent.filter((m) => m.channel === 'linky-live:changed').length,
+		2,
+		'and so must a stop',
+	);
+});
+
+test('a site that never opted in is not broadcast about', async () => {
+	const H = harness();
+
+	delete require.cache[require.resolve('../src/main.js')];
+	require('../src/main.js')(H.context);
+
+	// Opt-in per site is the whole contract: a site with no record has nothing to
+	// report and no panel state to keep current.
+	await H.actions.get('siteStarted')(H.site);
+	await H.actions.get('siteStopped')(H.site);
+
+	assert.deepEqual(H.sent.filter((m) => m.channel === 'linky-live:changed'), []);
+});

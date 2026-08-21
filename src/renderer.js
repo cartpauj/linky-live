@@ -14,12 +14,20 @@
 const React = require('react');
 const { NavLink, Route } = require('react-router-dom');
 const { ipcAsync } = require('@getflywheel/local/renderer');
+const { ipcRenderer } = require('electron');
 
 const stylesheet = require('./styles');
 
 const { useCallback, useEffect, useState } = React;
 
 const h = React.createElement;
+
+/*
+ * How often the panel re-reads its state while open. A port probe and two small
+ * file reads, so this is cheap; it only has to be quicker than someone starting
+ * a site and wondering why the tab still says it is off.
+ */
+const POLL_MS = 2500;
 
 const IPC = {
 	GET_STATE: 'linky-live:get-state',
@@ -30,6 +38,7 @@ const IPC = {
 	UPDATE_AUTH: 'linky-live:update-auth',
 	UPDATE_PATHS: 'linky-live:update-paths',
 	OPEN: 'linky-live:open',
+	CHANGED: 'linky-live:changed',
 };
 
 function LinkyLivePanel({ site }) {
@@ -45,9 +54,7 @@ function LinkyLivePanel({ site }) {
 	const [passDraft, setPassDraft] = useState('');
 	const [pathDraft, setPathDraft] = useState('');
 
-	const refresh = useCallback(async () => {
-		const next = await ipcAsync(IPC.GET_STATE, site.id);
-
+	const apply = useCallback((next) => {
 		setState(next);
 
 		// Seed credential fields from the server without clobbering typing.
@@ -55,11 +62,40 @@ function LinkyLivePanel({ site }) {
 			setUserDraft((prev) => (prev === '' ? next.site.authUser : prev));
 			setPassDraft((prev) => (prev === '' ? next.site.authPass : prev));
 		}
-	}, [site.id]);
+	}, []);
 
+	const refresh = useCallback(async () => {
+		apply(await ipcAsync(IPC.GET_STATE, site.id));
+	}, [apply, site.id]);
+
+	/*
+	 * Kept current two ways, because they cover different things.
+	 *
+	 * The main process broadcasts whenever it changes a site's record, which makes
+	 * anything the addon itself did appear immediately. Starting or stopping the
+	 * site is Local's doing, though, and only shows up here as whether the port
+	 * answers — nothing announces that, so it is polled while the tab is open.
+	 * Without the poll, a site started after opening the tab still reads as off
+	 * until you navigate away and back.
+	 */
 	useEffect(() => {
 		refresh();
-	}, [refresh]);
+
+		const onChanged = (_event, next) => {
+			if (next && next.siteId === site.id) {
+				apply(next);
+			}
+		};
+
+		ipcRenderer.on(IPC.CHANGED, onChanged);
+
+		const timer = setInterval(refresh, POLL_MS);
+
+		return () => {
+			ipcRenderer.removeListener(IPC.CHANGED, onChanged);
+			clearInterval(timer);
+		};
+	}, [apply, refresh, site.id]);
 
 	const act = useCallback(
 		async (fn) => {
