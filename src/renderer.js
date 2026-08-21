@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Renderer half of the addon: a "Live Link" tab on every site.
+ * Renderer half of the addon: a "Linky Live" tab on every site.
  *
  * Written with React.createElement rather than JSX so the addon needs no build
  * step. Local registers process-wide module aliases for react and
@@ -31,7 +31,7 @@ const IPC = {
 	UPDATE_PATHS: 'linky-live:update-paths',
 };
 
-function LiveLinkPanel({ site }) {
+function LinkyLivePanel({ site }) {
 	const [state, setState] = useState(null);
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState('');
@@ -315,7 +315,7 @@ function LiveLinkPanel({ site }) {
 
 		h('div', { className: 'll-section' },
 			h('div', { className: 'll-row ll-row--split' },
-				h('div', null, h('h3', null, 'Live Link'), statusPill),
+				h('div', null, h('h3', null, 'Linky Live'), statusPill),
 				h('button', {
 					className: enabled ? '' : 'll-primary',
 					disabled: busy,
@@ -515,12 +515,12 @@ module.exports = function renderer(context) {
 			key: 'linky-live-tab',
 			to: `/main/site-info/${site.id}/live-link`,
 			activeClassName: 'active',
-		}, 'Live Link'));
+		}, 'Linky Live'));
 
 	hooks.addContent('routes[site-info]', ({ routeChildrenProps }) =>
 		h(Route, {
 			key: 'linky-live-route',
 			path: '/main/site-info/:siteID/live-link',
-			render: () => h(LiveLinkPanel, { site: routeChildrenProps.site }),
+			render: () => h(LinkyLivePanel, { site: routeChildrenProps.site }),
 		}));
 };

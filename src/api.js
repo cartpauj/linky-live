@@ -62,13 +62,13 @@ class WorkerApi {
 					try {
 						parsed = JSON.parse(raw);
 					} catch {
-						reject(new Error(`Live link service returned an unreadable response (HTTP ${res.statusCode}).`));
+						reject(new Error(`The Linky Live service returned an unreadable response (HTTP ${res.statusCode}).`));
 						return;
 					}
 
 					if (res.statusCode >= 400 || parsed.ok === false) {
 						// The worker's own message is the useful one; surface it verbatim.
-						reject(new Error(parsed.error || `Live link service error (HTTP ${res.statusCode}).`));
+						reject(new Error(parsed.error || `Linky Live service error (HTTP ${res.statusCode}).`));
 						return;
 					}
 
@@ -77,7 +77,7 @@ class WorkerApi {
 			});
 
 			req.on('timeout', () => {
-				req.destroy(new Error('The live link service timed out.'));
+				req.destroy(new Error('The Linky Live service timed out.'));
 			});
 
 			req.on('error', reject);

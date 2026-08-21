@@ -37,7 +37,7 @@ Module._load = function (request, ...rest) {
 	return originalLoad.call(this, request, ...rest);
 };
 
-test('renderer registers a Live Link tab and its route', () => {
+test('renderer registers a Linky Live tab and its route', () => {
 	const renderer = require('../src/renderer.js');
 
 	assert.equal(typeof renderer, 'function');
@@ -58,6 +58,10 @@ test('renderer registers a Live Link tab and its route', () => {
 	assert.equal(tab.type, 'NavLink');
 	assert.equal(tab.props.to, '/main/site-info/site-1/live-link');
 	assert.ok(tab.props.key, 'needs a key since it renders in a list');
+
+	// The product is Linky Live. "Live Link" is Local's own feature, which this
+	// replaces, so a tab labelled that would be claiming to be the thing it is not.
+	assert.deepEqual(tab.children, ['Linky Live'], 'the tab carries the product name');
 
 	const route = content.get('routes[site-info]')({ routeChildrenProps: { site } });
 
@@ -220,4 +224,29 @@ test('the footer says where to change the service address', () => {
 	// There is no field for it after setup, so someone will go looking for one.
 	assert.match(source, /edit settings\.json/, 'must point at the file');
 	assert.match(source, /Change key/, 'the key itself is still changeable in the UI');
+});
+
+test('nothing user-facing is branded "Live Link"', () => {
+	const fs = require('node:fs');
+
+	// Local ships its own "Live Links", which this replaces. Mixing the two names
+	// in the UI or in a notification makes it impossible to tell whose feature is
+	// talking — so our name appears in text people read, and Local's only ever in
+	// comments that refer to their feature deliberately.
+	for (const file of ['src/renderer.js', 'src/main.js', 'src/api.js']) {
+		const lines = fs.readFileSync(file, 'utf8').split('\n');
+
+		lines.forEach((line, i) => {
+			// Comments may name Local's feature; strings people see may not.
+			if (/^\s*(\/\/|\*|\/\*)/.test(line)) {
+				return;
+			}
+
+			assert.doesNotMatch(
+				line,
+				/Live Link/,
+				`${file}:${i + 1} is user-facing and says "Live Link": ${line.trim()}`,
+			);
+		});
+	}
 });

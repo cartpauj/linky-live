@@ -408,13 +408,13 @@ module.exports = function addon(context) {
 		}
 
 		if (FATAL_REASONS.has(reason)) {
-			logger.warn(`Live link for ${name} failed permanently (${reason}); not retrying.`);
+			logger.warn(`Linky Live for ${name} failed permanently (${reason}); not retrying.`);
 
 			notifier.notify({
-				title: 'Live Link failed',
+				title: 'Linky Live failed',
 				message: reason === 'unauthorized'
-					? `The live link for ${name} was rejected. Check your API key, or release and re-enable the address.`
-					: `The live link for ${name} no longer exists. Release the address and turn it on again.`,
+					? `The Linky Live link for ${name} was rejected. Check your API key, or release and re-enable the address.`
+					: `The Linky Live link for ${name} no longer exists. Release the address and turn it on again.`,
 			});
 
 			await disable(siteId);
@@ -423,10 +423,10 @@ module.exports = function addon(context) {
 		}
 
 		if (reason === 'localUnreachable') {
-			logger.warn(`Live link for ${name} could not reach the site; waiting for it to start.`);
+			logger.warn(`Linky Live for ${name} could not reach the site; waiting for it to start.`);
 
 			notifier.notify({
-				title: 'Live Link paused',
+				title: 'Linky Live paused',
 				message: `${name} is not reachable on its port. The link will return when the site is running.`,
 			});
 
@@ -438,11 +438,11 @@ module.exports = function addon(context) {
 		const state = reconnects.get(siteId) || { attempt: 0, since: Date.now() };
 
 		if (Date.now() - state.since >= MAX_RECONNECT_MS) {
-			logger.warn(`Giving up reconnecting the live link for ${name} after ${MAX_RECONNECT_MS / 1000}s.`);
+			logger.warn(`Giving up reconnecting Linky Live for ${name} after ${MAX_RECONNECT_MS / 1000}s.`);
 
 			notifier.notify({
-				title: 'Live Link stopped',
-				message: `The live link for ${name} could not reconnect (exit ${code}). Turn it on again when ready.`,
+				title: 'Linky Live stopped',
+				message: `The Linky Live link for ${name} could not reconnect (exit ${code}). Turn it on again when ready.`,
 			});
 
 			reconnects.delete(siteId);
@@ -456,7 +456,7 @@ module.exports = function addon(context) {
 
 		const delay = reconnectDelay(state.attempt);
 
-		logger.info(`Reconnecting the live link for ${name} in ${delay / 1000}s (attempt ${state.attempt}).`);
+		logger.info(`Reconnecting Linky Live for ${name} in ${delay / 1000}s (attempt ${state.attempt}).`);
 
 		broadcast(siteId);
 
@@ -548,11 +548,11 @@ module.exports = function addon(context) {
 		try {
 			await enable(site.id);
 		} catch (err) {
-			logger.warn(`Could not resume the live link for ${site.name}: ${err.message}`);
+			logger.warn(`Could not resume Linky Live for ${site.name}: ${err.message}`);
 
 			notifier.notify({
-				title: 'Live Link did not resume',
-				message: `${site.name} is running, but its live link could not start: ${err.message}`,
+				title: 'Linky Live did not resume',
+				message: `${site.name} is running, but its Linky Live link could not start: ${err.message}`,
 			});
 		}
 	});

@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Linky Live — URL Helper
-Description: Tells the live link gateway which local host to rewrite, and points WordPress's generated URLs at the public address.
+Description: Tells the Linky Live gateway which local host to rewrite, and points WordPress's generated URLs at the public address.
 Version: 2.0.0
 Author: cartpauj
 License: GPLv3 or later

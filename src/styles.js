@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Theme-aware stylesheet for the Live Link tab.
+ * Theme-aware stylesheet for the Linky Live tab.
  *
  * Local puts a `Theme__Dark` or `Theme__Light` class on an ancestor element and
  * switches it when the user changes the appearance setting. Hardcoded colours are
