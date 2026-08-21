@@ -297,6 +297,19 @@ node --test test/            # no dependencies needed
 ./scripts/build-addon.sh     # dist/linky-live.tgz
 ```
 
+### Versioning
+
+`package.json` is the single source of truth. Local reads it directly and shows
+the version in its Add-ons list, and **de-duplicates add-ons by name and
+version** — so a build claiming a higher version will shadow a lower one, even if
+the lower one is newer in real time. Keep the number honest.
+
+The add-on also talks to a [Linky Live
+Worker](https://github.com/cartpauj/linky-live-worker) over a wire contract: the
+`X-Linky-Live` and `X-Local-Host` headers and the `/v1/*` endpoints. The Worker
+reports its own version on `/v1/status`, so the two can be checked against each
+other.
+
 ### Releasing
 
 Pushing a `vX.Y.Z` tag builds the archive and publishes it as a GitHub release.
@@ -304,8 +317,8 @@ Pushing a `vX.Y.Z` tag builds the archive and publishes it as a GitHub release.
 ```bash
 # 1. bump the version in package.json and commit
 # 2. tag it, matching exactly
-git tag v1.1.0
-git push origin v1.1.0
+git tag v0.0.2
+git push origin v0.0.2
 ```
 
 The workflow refuses to publish if the tag and `package.json` version disagree,
@@ -317,6 +330,12 @@ The release asset is always named `linky-live.tgz`, without a version. Local nam
 the installed folder after the archive, so a versioned filename would leave a
 stale copy behind on every upgrade.
 
+### CI
+
+Pushes and pull requests run the tests, lint the mu-plugins with `php -l` — the
+Node tests cannot parse PHP, so a syntax error there would otherwise only surface
+when a site tried to load one — and verify the archive still builds.
+
 ### Iterating on the add-on
 
 Local's `addon-development.json` has `enabled: true`, so a plain folder in the
@@ -324,7 +343,7 @@ add-ons directory is loaded without packaging. Symlink instead of reinstalling a
 `.tgz` each time:
 
 ```bash
-ln -s "$PWD/addon" ~/.config/Local/addons/localinky-live-links   # Linux
+ln -s "$PWD" ~/.config/Local/addons/linky-live   # Linux
 # macOS:   ~/Library/Application Support/Local/addons/
 # Windows: %APPDATA%\Local\addons\
 ```
