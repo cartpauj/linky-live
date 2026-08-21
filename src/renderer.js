@@ -287,7 +287,12 @@ function LiveLinkPanel({ site }) {
 				}, 'Cancel'),
 			)
 			: h(React.Fragment, null,
-				h('span', null, `${controlHostname} · key ${keyHint} — shared by all your sites.`),
+				h('span', {
+					// There is no field for the service address after setup, so say where
+					// to change it rather than leaving someone hunting for one.
+					title: 'To point at a different Linky Live service, edit settings.json '
+						+ 'in Local\'s user data folder and restart Local.',
+				}, `${controlHostname} · key ${keyHint} — shared by all your sites.`),
 				h('button', {
 					className: 'll-link',
 					onClick: () => setEditingKey(true),

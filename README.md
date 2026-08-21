@@ -83,6 +83,32 @@ Open any site, click the **Linky Live** tab, and enter the service address and
 your API key. Both are stored once on this computer and apply to every site, so
 you are not asked again.
 
+### Changing them later
+
+The footer of the Linky Live tab shows which service and key are in use, with a
+**Change key** link for rotating your key.
+
+**The service address can only be changed by editing the file.** It is assumed to
+be set once, so there is no field for it after setup. If your Linky Live Worker
+moves to a different hostname, edit `settings.json` and restart Local:
+
+| Platform | Path |
+| --- | --- |
+| macOS | `~/Library/Application Support/Local/linky-live/settings.json` |
+| Windows | `%APPDATA%\Local\linky-live\settings.json` |
+| Linux | `~/.config/Local/linky-live/settings.json` |
+
+```json
+{
+  "apiKey": "linky_…",
+  "controlHostname": "linky-live.example.com"
+}
+```
+
+Store `controlHostname` as a bare hostname — no scheme, no trailing slash.
+Deleting the file resets the add-on to its setup screen, which is the other way
+to change the address.
+
 ## Using it
 
 **Turn on** allocates a permanent address like `https://linky-k4d8vn.example.com` and
@@ -159,6 +185,9 @@ mu-plugin.
   your options or post content.
 - Turning a site off in Local stops its tunnel automatically.
 - Logs go to Local's own log file; look for `LinkyLive` and `cloudflared`.
+- The service address has no UI field after setup — see
+  [Changing them later](#changing-them-later) to point the add-on at a different
+  Worker.
 
 ## Repo layout
 

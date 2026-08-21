@@ -210,3 +210,14 @@ test('first run asks for both the service address and the key', () => {
 	// No real deployment may be referenced anywhere in the shipped UI.
 	assert.doesNotMatch(source, /\.co\b(?!m)/, 'must not hardcode a real service host');
 });
+
+test('the footer says where to change the service address', () => {
+	const source = require('node:fs').readFileSync(
+		require('node:path').join(__dirname, '..', 'src', 'renderer.js'),
+		'utf8',
+	);
+
+	// There is no field for it after setup, so someone will go looking for one.
+	assert.match(source, /edit settings\.json/, 'must point at the file');
+	assert.match(source, /Change key/, 'the key itself is still changeable in the UI');
+});
